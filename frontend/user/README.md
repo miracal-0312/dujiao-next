@@ -1,8 +1,8 @@
-# Dujiao-Next User Web
+# YZWAI User Web
 
 The customer-facing storefront for browsing products, placing orders, and completing payments.
 
-> This directory is part of the [dujiao-next](https://github.com/dujiao-next/dujiao-next)
+> This directory is part of the [YZWAI](https://github.com/dujiao-next/dujiao-next)
 > single repository and is no longer released on its own. Production assets are embedded
 > into the server binary via `go:embed` and served by the same process, on the same port,
 > as `frontend/admin`.

@@ -1,6 +1,6 @@
-# Dujiao-Next
+# YZWAI
 
-Dujiao-Next is a digital goods e-commerce platform. This repository contains the complete
+YZWAI is a digital goods e-commerce platform. This repository contains the complete
 application: the Go backend, the customer storefront, and the admin panel.
 
 ## ❤️ Brand Partners (Sponsors)
@@ -21,7 +21,7 @@ application: the Go backend, the customer storefront, and the admin panel.
 
 <tr>
 <td width="180"><a href="https://niub.me"><img src="assets/partners/niub.png" alt="openmodel" width="150"></a></td>
-<td> <a href="https://niub.me">NIUB — 数字服务，一站直达(DujiaoNext自营旗舰店)</a> 正在寻找更便捷的 AI 服务、社交账号或数字礼品卡？NIUB（niub.me）专注提供多种虚拟商品与数字服务，让不同类型的数字需求都能在一个站点完成选购。
+<td> <a href="https://niub.me">NIUB — 数字服务，一站直达</a> 正在寻找更便捷的 AI 服务、社交账号或数字礼品卡？NIUB（niub.me）专注提供多种虚拟商品与数字服务，让不同类型的数字需求都能在一个站点完成选购。
 我们重视清晰的商品信息、明确的交付方式和负责任的售后支持。每件商品的账号类型、适用地区、有效期限、使用条件与售后范围，均以对应商品页面说明为准。
 访问 NIUB，探索更多数字服务与虚拟商品。</td>
 </tr>

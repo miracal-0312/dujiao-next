@@ -1,11 +1,11 @@
-# Dujiao-Next 配置文件
+# YZWAI 配置文件
 #
 # 首次启动前必须把下面三个占位密钥替换为彼此不同的强随机值，否则服务会拒绝启动。
 # 可分别执行三次：openssl rand -hex 32
 
 app:
   secret_key: your-secret-key-change-in-production-please # 务必修改，用于 AES-256 加密敏感数据
-  totp_issuer: Dujiao-Next                          # 后台 2FA 验证器中显示的发行方名称（避免 & 等特殊字符）
+  totp_issuer: YZWAI                          # 后台 2FA 验证器中显示的发行方名称（避免 & 等特殊字符）
 
 server:
   host: 0.0.0.0

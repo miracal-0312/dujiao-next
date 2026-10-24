@@ -4,7 +4,7 @@ import { configAPI } from '../api'
 import { applyCustomScripts } from '../utils/customScripts'
 import { getImageUrl } from '../utils/image'
 import { getLocalizedText } from '../utils/resellerSiteConfig'
-import { detectLocale, setI18nLocale } from '../i18n'
+import i18n, { detectLocale, setI18nLocale } from '../i18n'
 import { useHead } from '@unhead/vue'
 
 export const useAppStore = defineStore('app', () => {
@@ -42,7 +42,7 @@ export const useAppStore = defineStore('app', () => {
             const localized = getLocalizedText(seo?.title, lang)
             if (localized) return String(localized).trim() || undefined
             const siteName = String(config.value?.brand?.site_name || '').trim()
-            return siteName || undefined
+            return siteName || i18n.global.t('common.siteName')
         },
         link: () => [{ key: 'favicon', rel: 'icon', href: siteIconHref.value }],
         meta: () => {

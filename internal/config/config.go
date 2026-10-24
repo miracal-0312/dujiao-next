@@ -313,7 +313,7 @@ func Load() *Config {
 
 	// 设置默认值（可选）
 	viper.SetDefault("app.secret_key", "change-me-32-byte-secret-key!!")
-	viper.SetDefault("app.totp_issuer", "Dujiao-Next")
+	viper.SetDefault("app.totp_issuer", "YZWAI")
 	viper.SetDefault("server.host", "0.0.0.0")
 	viper.SetDefault("server.port", "8080")
 	viper.SetDefault("server.mode", "debug")
