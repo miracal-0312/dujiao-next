@@ -1126,6 +1126,13 @@ onMounted(async () => {
                   <span class="inline-flex rounded-full border px-2.5 py-1 text-xs" :class="cardSecretStatusClass(secret.status)">
                     {{ cardSecretStatusLabel(secret.status) }}
                   </span>
+                  <div v-if="secret.redeemed_at" class="mt-2 text-emerald-700">
+                    <span class="font-medium">{{ t('admin.cardSecrets.redemption.confirmed') }}</span>
+                    <div class="mt-1 whitespace-nowrap text-[11px]">{{ formatDate(secret.redeemed_at) }}</div>
+                  </div>
+                  <div v-else-if="secret.status === 'used'" class="mt-2 text-muted-foreground">
+                    {{ t('admin.cardSecrets.redemption.unconfirmed') }}
+                  </div>
                 </TableCell>
                 <TableCell class="min-w-[90px] px-4 py-3 text-xs">
                   <div class="flex flex-col gap-1">

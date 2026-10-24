@@ -224,6 +224,10 @@ export interface AdminCardSecret {
   order_id?: number
   reserved_at?: string
   used_at?: string
+  redeemed_at?: string | null
+  redemption_event_id?: string
+  redemption_source?: string
+  redemption_order_id?: string
   created_at: string
   updated_at: string
   batch?: AdminCardSecretBatch

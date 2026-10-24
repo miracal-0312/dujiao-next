@@ -16,6 +16,9 @@ const (
 
 var messages = map[string]map[string]string{
 	LocaleZH: {
+		"error.redemption_disabled":                      "卡密核销回调尚未启用",
+		"error.redemption_signature":                     "核销凭证签名无效或已过期",
+		"error.redemption_conflict":                      "卡密未发货、存在重复卡密或核销凭证冲突，请人工核对",
 		"error.jwt_secret_missing":                       "JWT secret 未配置",
 		"error.auth_header_missing":                      "缺少 Authorization header",
 		"error.auth_header_invalid":                      "Authorization header 格式错误",
@@ -391,6 +394,9 @@ var messages = map[string]map[string]string{
 		"error.invalid_product_status":              "无效的商品状态参数",
 	},
 	LocaleTW: {
+		"error.redemption_disabled":                      "卡密核銷回調尚未啟用",
+		"error.redemption_signature":                     "核銷憑證簽名無效或已過期",
+		"error.redemption_conflict":                      "卡密未發貨、存在重複卡密或核銷憑證衝突，請人工核對",
 		"error.jwt_secret_missing":                       "JWT secret 未配置",
 		"error.auth_header_missing":                      "缺少 Authorization header",
 		"error.auth_header_invalid":                      "Authorization header 格式錯誤",
@@ -766,6 +772,9 @@ var messages = map[string]map[string]string{
 		"error.invalid_product_status":              "無效的商品狀態參數",
 	},
 	LocaleEN: {
+		"error.redemption_disabled":                      "Card redemption callbacks are disabled",
+		"error.redemption_signature":                     "Invalid or expired redemption signature",
+		"error.redemption_conflict":                      "Card not delivered, duplicate card, or conflicting redemption receipt; manual review required",
 		"error.jwt_secret_missing":                       "JWT secret is not configured",
 		"error.auth_header_missing":                      "Missing Authorization header",
 		"error.auth_header_invalid":                      "Invalid Authorization header format",

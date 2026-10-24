@@ -1931,6 +1931,7 @@ const messages = {
       },
       cardSecrets: {
         title: '卡密库存',
+        redemption: { confirmed: '充值已核销', unconfirmed: '尚无核销凭证' },
         importAction: '前往导入页',
         guide: {
           title: '管理卡密库存',
@@ -6459,6 +6460,7 @@ const messages = {
       },
       cardSecrets: {
         title: '卡密庫存',
+        redemption: { confirmed: '充值已核銷', unconfirmed: '尚無核銷憑證' },
         importAction: '前往導入頁',
         guide: {
           title: '管理卡密庫存',
@@ -10987,6 +10989,7 @@ const messages = {
       },
       cardSecrets: {
         title: 'Card Secrets',
+        redemption: { confirmed: 'Recharge redeemed', unconfirmed: 'No redemption receipt' },
         importAction: 'Open Import Page',
         guide: {
           title: 'Manage Card Secret Inventory',

@@ -14,25 +14,32 @@ import (
 
 // Config 应用配置结构
 type Config struct {
-	App          AppConfig          `mapstructure:"app"`
-	Server       ServerConfig       `mapstructure:"server"`
-	Log          LogConfig          `mapstructure:"log"`
-	Database     DatabaseConfig     `mapstructure:"database"`
-	JWT          JWTConfig          `mapstructure:"jwt"`
-	UserJWT      JWTConfig          `mapstructure:"user_jwt"`
-	Bootstrap    BootstrapConfig    `mapstructure:"bootstrap"`
-	TelegramAuth TelegramAuthConfig `mapstructure:"telegram_auth"`
-	GoogleAuth   GoogleAuthConfig   `mapstructure:"google_auth"`
-	Redis        RedisConfig        `mapstructure:"redis"`
-	Queue        QueueConfig        `mapstructure:"queue"`
-	Upload       UploadConfig       `mapstructure:"upload"`
-	CORS         CORSConfig         `mapstructure:"cors"`
-	Security     SecurityConfig     `mapstructure:"security"`
-	Email        EmailConfig        `mapstructure:"email"`
-	Order        OrderConfig        `mapstructure:"order"`
-	Captcha      CaptchaConfig      `mapstructure:"captcha"`
-	Web          WebConfig          `mapstructure:"web"`
-	Reseller     ResellerConfig     `mapstructure:"reseller"`
+	App            AppConfig            `mapstructure:"app"`
+	Server         ServerConfig         `mapstructure:"server"`
+	Log            LogConfig            `mapstructure:"log"`
+	Database       DatabaseConfig       `mapstructure:"database"`
+	JWT            JWTConfig            `mapstructure:"jwt"`
+	UserJWT        JWTConfig            `mapstructure:"user_jwt"`
+	Bootstrap      BootstrapConfig      `mapstructure:"bootstrap"`
+	TelegramAuth   TelegramAuthConfig   `mapstructure:"telegram_auth"`
+	GoogleAuth     GoogleAuthConfig     `mapstructure:"google_auth"`
+	Redis          RedisConfig          `mapstructure:"redis"`
+	Queue          QueueConfig          `mapstructure:"queue"`
+	Upload         UploadConfig         `mapstructure:"upload"`
+	CORS           CORSConfig           `mapstructure:"cors"`
+	Security       SecurityConfig       `mapstructure:"security"`
+	Email          EmailConfig          `mapstructure:"email"`
+	Order          OrderConfig          `mapstructure:"order"`
+	Captcha        CaptchaConfig        `mapstructure:"captcha"`
+	Web            WebConfig            `mapstructure:"web"`
+	Reseller       ResellerConfig       `mapstructure:"reseller"`
+	CardRedemption CardRedemptionConfig `mapstructure:"card_redemption"`
+}
+
+type CardRedemptionConfig struct {
+	Enabled bool   `mapstructure:"enabled"`
+	Source  string `mapstructure:"source"`
+	Secret  string `mapstructure:"secret"`
 }
 
 // AppConfig 应用级配置
@@ -313,6 +320,9 @@ func Load() *Config {
 
 	// 设置默认值（可选）
 	viper.SetDefault("app.secret_key", "change-me-32-byte-secret-key!!")
+	viper.SetDefault("card_redemption.enabled", false)
+	viper.SetDefault("card_redemption.source", "pay-gpt-orbit")
+	viper.SetDefault("card_redemption.secret", "")
 	viper.SetDefault("app.totp_issuer", "YZWAI")
 	viper.SetDefault("server.host", "0.0.0.0")
 	viper.SetDefault("server.port", "8080")

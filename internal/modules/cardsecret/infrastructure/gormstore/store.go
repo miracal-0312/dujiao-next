@@ -236,7 +236,17 @@ func (r *Store) GetByID(id uint) (*cardsecretdomain.Secret, error) {
 
 // Update 更新卡密
 func (r *Store) Update(secret *cardsecretdomain.Secret) error {
-	return r.db.Save(secret).Error
+	// Never let a stale admin edit erase a concurrently received redemption receipt.
+	result := r.db.Model(&cardsecretdomain.Secret{}).
+		Where("id = ? AND redeemed_at IS NULL AND deleted_at IS NULL", secret.ID).
+		Updates(map[string]interface{}{"secret": secret.Secret, "status": secret.Status, "updated_at": secret.UpdatedAt})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected != 1 {
+		return cardsecretcontract.ErrRedemptionConflict
+	}
+	return nil
 }
 
 // BatchUpdateStatus 批量更新卡密状态
@@ -248,7 +258,7 @@ func (r *Store) BatchUpdateStatus(ids []uint, status string, updatedAt time.Time
 		updatedAt = time.Now()
 	}
 	result := r.db.Model(&cardsecretdomain.Secret{}).
-		Where("id IN ? AND deleted_at IS NULL", ids).
+		Where("id IN ? AND deleted_at IS NULL AND redeemed_at IS NULL", ids).
 		Updates(map[string]interface{}{
 			"status":     status,
 			"updated_at": updatedAt,

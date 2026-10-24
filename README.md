@@ -268,6 +268,55 @@ Note that admin uses `build:fullstack`, not `build`. Plain `build` produces a bu
 
 ## Testing
 
+### Pay-gpt-Orbit CDK redemption callbacks
+
+The optional `POST /api/v1/card-secrets/redemption-callback` endpoint accepts signed
+recharge receipts from Pay-gpt-Orbit. Enable it in the shop's existing `config.yml`:
+
+```yaml
+card_redemption:
+  enabled: true
+  source: "pay-gpt-orbit"
+  secret: "replace-with-a-shared-random-secret-of-at-least-32-bytes"
+```
+
+The equivalent environment variables are `CARD_REDEMPTION_ENABLED`,
+`CARD_REDEMPTION_SOURCE` and `CARD_REDEMPTION_SECRET`. Set the same source and secret
+in Pay-gpt-Orbit using `CDK_REDEMPTION_SOURCE` and `CDK_REDEMPTION_WEBHOOK_SECRET`,
+and set its `CDK_REDEMPTION_WEBHOOK_URL` to this endpoint on the deployed shop's HTTPS
+domain. Generate a separate random secret; do not reuse the payment API secret.
+
+The JSON receipt contains `version: 1`, `event_type: "cdk.redeemed"`, `event_id`
+(64 lowercase hex characters), `source`, `cdk`, `order_id`, and `redeemed_at`
+(RFC3339 UTC). Sign the exact UTF-8 request bytes using
+`HMAC-SHA256(secret, timestamp + "." + rawBody)`. Send Unix seconds in
+`X-Redemption-Timestamp` and the lowercase hex signature in
+`X-Redemption-Signature`. Timestamps must be within 300 seconds of the server.
+Retries retain the receipt and event ID and refresh only the timestamp/signature.
+Success returns HTTP 200 with `status_code: 0` and
+`data: { "event_id": "original-event-id", "received": true }`.
+
+The card secret must match exactly one non-deleted inventory row containing only
+the CDK, with `status=used` (delivered). Missing cards return 404; duplicate secrets,
+undelivered inventory, and conflicting receipts return 409. Signature failures return
+401; a disabled receiver or database failure returns 503. All errors remain eligible
+for the sender's durable retry queue after the underlying issue is fixed.
+
+`used` retains its existing delivery meaning. The callback atomically adds
+`redeemed_at`, `redemption_event_id`, `redemption_source`, and `redemption_order_id`;
+the admin inventory displays the separate recharge redemption status and time.
+Identical retries succeed without modifying the receipt or delivery timestamp.
+Redeemed rows cannot be edited or reset to available by single/batch status updates.
+Payment/order status is unchanged. No account Session, email or payment card details
+are accepted by this endpoint.
+
+Normal startup migrations add the nullable redemption fields and event unique index.
+Deploy the updated backend and rebuild the admin frontend together. Deploy and enable
+this receiver before enabling the sender. Only new successful redemptions after sender
+configuration generate notifications; historical redemptions are not backfilled.
+
+### Test commands
+
 ```bash
 go test ./...                              # full suite
 go test ./internal/architecture/...        # dependency and layering guards
