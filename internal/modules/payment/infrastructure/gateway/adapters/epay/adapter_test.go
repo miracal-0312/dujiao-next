@@ -67,6 +67,9 @@ func TestEpayAdapter_CreatePayment_ConfigInvalidMapped(t *testing.T) {
 // 字段写入回归。模式见 stripe_adapter_test.go 同名测试。
 func TestEpayAdapter_CreatePayment_ExchangeRate_AuditFields(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/mapi" {
+			t.Errorf("API path = %q, want /mapi", r.URL.Path)
+		}
 		w.Header().Set("Content-Type", "application/json")
 		// epay native 期望 JSON-encoded-string 响应,这里直接返回原始 JSON 即可
 		// (epay_create_test.go 用 double-encoded 测了 string→json 的退化路径,
@@ -84,6 +87,8 @@ func TestEpayAdapter_CreatePayment_ExchangeRate_AuditFields(t *testing.T) {
 		"notify_url":   "https://api.example.com/api/v1/payments/callback/epay",
 		"return_url":   "https://shop.example.com/pay",
 		"sign_type":    "MD5",
+		"api_path":     "/mapi",
+		"submit_path":  "/submit",
 		// 跨币种:10 USD → 72 CNY (rate 7.2)
 		"target_currency": "CNY",
 		"exchange_rate":   "7.2",
@@ -119,6 +124,78 @@ func TestEpayAdapter_CreatePayment_ExchangeRate_AuditFields(t *testing.T) {
 	}
 	if got := result.Payload["original_currency"]; got != "USD" {
 		t.Fatalf("Payload[original_currency] = %v, want USD", got)
+	}
+}
+
+func TestEpayAdapter_CreatePayment_V1SubmitPath(t *testing.T) {
+	for _, tt := range []struct {
+		name       string
+		submitPath interface{}
+		wantPath   string
+	}{
+		{name: "omitted", wantPath: "/yipay/submit.php"},
+		{name: "empty", submitPath: "", wantPath: "/yipay/submit.php"},
+		{name: "whitespace", submitPath: " \t ", wantPath: "/yipay/submit.php"},
+		{name: "custom", submitPath: "/submit", wantPath: "/yipay/submit"},
+		{name: "relative", submitPath: "submit", wantPath: "/yipay/submit"},
+		{name: "trimmed", submitPath: " /submit ", wantPath: "/yipay/submit"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			raw := jsonmap.JSON{
+				"gateway_url":  "https://gateway.example.com/yipay/",
+				"epay_version": "v1",
+				"merchant_id":  "1001",
+				"merchant_key": "test-key",
+				"notify_url":   "https://shop.example.com/api/v1/payments/callback",
+				"return_url":   "https://shop.example.com/pay",
+				"api_path":     "/mapi",
+			}
+			if tt.submitPath != nil {
+				raw["submit_path"] = tt.submitPath
+			}
+			result, err := NewEpayAdapter().CreatePayment(context.Background(), raw, paymentcontract.GatewayCreateInput{
+				OrderNo:     "DJP-SUBMIT-001",
+				Subject:     "测试商品 & subscription",
+				Currency:    "CNY",
+				Amount:      money.FromDecimal(decimal.NewFromInt(10)),
+				ChannelType: constants.PaymentChannelTypeAlipay,
+				Extra:       jsonmap.JSON{"interaction_mode": constants.PaymentInteractionRedirect},
+			})
+			if err != nil {
+				t.Fatalf("CreatePayment() failed: %v", err)
+			}
+			parsed, err := url.Parse(result.RedirectURL)
+			if err != nil {
+				t.Fatalf("parse redirect URL: %v", err)
+			}
+			wantEndpoint := "https://gateway.example.com" + tt.wantPath
+			if got := parsed.Scheme + "://" + parsed.Host + parsed.Path; got != wantEndpoint {
+				t.Fatalf("redirect endpoint = %q, want %q", got, wantEndpoint)
+			}
+			if got := result.Payload["endpoint"]; got != wantEndpoint {
+				t.Fatalf("payload endpoint = %v, want %s", got, wantEndpoint)
+			}
+			params := map[string]string{
+				"pid":          "1001",
+				"type":         "alipay",
+				"out_trade_no": "DJP-SUBMIT-001",
+				"name":         "测试商品 & subscription",
+				"money":        "10",
+				"notify_url":   "https://shop.example.com/api/v1/payments/callback",
+				"return_url":   "https://shop.example.com/pay",
+			}
+			params["sign"] = md5Hex(buildEpayAdapterSignContent(params) + "test-key")
+			params["sign_type"] = "MD5"
+			query := parsed.Query()
+			if len(query) != len(params) {
+				t.Fatalf("unexpected redirect parameters: %v", query)
+			}
+			for key, want := range params {
+				if got := query.Get(key); got != want {
+					t.Errorf("query[%s] = %q, want %q", key, got, want)
+				}
+			}
+		})
 	}
 }
 

@@ -66,6 +66,7 @@ type Config struct {
 	PublicKey   string `json:"platform_public_key"` // 平台公钥（v2）
 	SignType    string `json:"sign_type"`           // 签名类型
 	APIPath     string `json:"api_path"`            // 接口路径
+	SubmitPath  string `json:"submit_path"`         // v1 页面跳转路径，默认 /submit.php
 	NotifyURL   string `json:"notify_url"`          // 异步通知地址
 	ReturnURL   string `json:"return_url"`          // 同步跳转地址
 	Method      string `json:"method"`              // 支付方式（v2 method）
@@ -288,7 +289,11 @@ func buildRedirectV1(cfg *Config, input CreateInput, payType string) (*CreateRes
 	signContent := buildSignContent(params)
 	params["sign"] = signMD5(signContent + cfg.MerchantKey)
 	params["sign_type"] = cfg.SignType
-	endpoint := buildEndpoint(cfg.GatewayURL, epaySubmitPathV1)
+	submitPath := strings.TrimSpace(cfg.SubmitPath)
+	if submitPath == "" {
+		submitPath = epaySubmitPathV1
+	}
+	endpoint := buildEndpoint(cfg.GatewayURL, submitPath)
 	return buildRedirectResult(endpoint, payType, params), nil
 }
 
