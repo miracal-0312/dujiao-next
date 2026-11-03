@@ -83,11 +83,19 @@ const submitEdit = async () => {
         </div>
         <div>
           <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.cardSecrets.editSecret') }}</label>
-          <Textarea v-model="editForm.secret" rows="3" :placeholder="t('admin.cardSecrets.editSecretPlaceholder')" />
+          <Textarea
+            v-model="editForm.secret"
+            rows="3"
+            :placeholder="t('admin.cardSecrets.editSecretPlaceholder')"
+            :disabled="Boolean(cardSecret?.redeemed_at)"
+          />
         </div>
+        <p v-if="cardSecret?.redeemed_at" class="text-xs text-muted-foreground">
+          {{ t('admin.cardSecrets.redemption.lockedHint') }}
+        </p>
         <div>
           <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.cardSecrets.editStatus') }}</label>
-          <Select v-model="editForm.status">
+          <Select v-model="editForm.status" :disabled="Boolean(cardSecret?.redeemed_at)">
             <SelectTrigger class="h-9 w-full">
               <SelectValue :placeholder="t('admin.cardSecrets.status.available')" />
             </SelectTrigger>
@@ -103,7 +111,7 @@ const submitEdit = async () => {
         </div>
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button class="w-full sm:w-auto" type="button" variant="outline" @click="closeModal">{{ t('admin.common.cancel') }}</Button>
-          <Button class="w-full sm:w-auto" type="submit" :disabled="editSubmitting">
+          <Button class="w-full sm:w-auto" type="submit" :disabled="editSubmitting || Boolean(cardSecret?.redeemed_at)">
             {{ editSubmitting ? t('admin.common.loading') : t('admin.common.save') }}
           </Button>
         </div>

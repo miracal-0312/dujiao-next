@@ -719,6 +719,14 @@ func TestCardSecretServiceListBatchesReturnsRealtimeCounts(t *testing.T) {
 	if _, err := svc.BatchUpdateCardSecretStatus(rows[1:], 0, ListCardSecretInput{}, cardsecretdomain.StatusUsed); err != nil {
 		t.Fatalf("mark batch A used failed: %v", err)
 	}
+	batchID := batchA.ID
+	redeemedAt := time.Now().UTC()
+	if err := cardsecretgormstore.New(db).CreateBatch([]cardsecretdomain.Secret{{
+		ProductID: product.ID, SKUID: defaultSKU.ID, BatchID: &batchID,
+		Secret: "SUMMARY-A-003", Status: cardsecretdomain.StatusUpstreamRedeemed, RedeemedAt: &redeemedAt,
+	}}); err != nil {
+		t.Fatalf("create upstream-redeemed secret failed: %v", err)
+	}
 	if _, err := svc.BatchDeleteCardSecrets(nil, batchB.ID, ListCardSecretInput{}); err != nil {
 		t.Fatalf("delete batch B failed: %v", err)
 	}
@@ -734,16 +742,25 @@ func TestCardSecretServiceListBatchesReturnsRealtimeCounts(t *testing.T) {
 	for _, summary := range summaries {
 		switch summary.BatchNo {
 		case "SUMMARY-A":
-			if summary.TotalCount != 2 || summary.AvailableCount != 0 || summary.ReservedCount != 1 || summary.UsedCount != 1 {
+			if summary.TotalCount != 3 || summary.AvailableCount != 0 || summary.ReservedCount != 1 ||
+				summary.UsedCount != 1 || summary.UpstreamRedeemedCount != 1 {
 				t.Fatalf("summary A mismatch: %+v", summary)
 			}
 		case "SUMMARY-B":
-			if summary.TotalCount != 0 || summary.AvailableCount != 0 || summary.ReservedCount != 0 || summary.UsedCount != 0 {
+			if summary.TotalCount != 0 || summary.AvailableCount != 0 || summary.ReservedCount != 0 ||
+				summary.UsedCount != 0 || summary.UpstreamRedeemedCount != 0 {
 				t.Fatalf("summary B mismatch: %+v", summary)
 			}
 		default:
 			t.Fatalf("unexpected batch summary: %+v", summary)
 		}
+	}
+	stats, err := svc.GetStats(product.ID, defaultSKU.ID)
+	if err != nil {
+		t.Fatalf("get card secret stats failed: %v", err)
+	}
+	if stats.Total != 3 || stats.UpstreamRedeemed != 1 {
+		t.Fatalf("upstream redemption missing from stats: %+v", stats)
 	}
 }
 

@@ -3,31 +3,34 @@ package application
 import (
 	"time"
 
+	cardsecretcontract "github.com/dujiao-next/internal/modules/cardsecret/contract"
 	cardsecretdomain "github.com/dujiao-next/internal/modules/cardsecret/domain"
 )
 
 // CardSecretStats 卡密统计
 type CardSecretStats struct {
-	Total     int64 `json:"total"`
-	Available int64 `json:"available"`
-	Reserved  int64 `json:"reserved"`
-	Used      int64 `json:"used"`
+	Total            int64 `json:"total"`
+	Available        int64 `json:"available"`
+	Reserved         int64 `json:"reserved"`
+	Used             int64 `json:"used"`
+	UpstreamRedeemed int64 `json:"upstream_redeemed"`
 }
 
 // CardSecretBatchSummary 卡密批次列表摘要
 type CardSecretBatchSummary struct {
-	ID             uint      `json:"id"`
-	ProductID      uint      `json:"product_id"`
-	SKUID          uint      `json:"sku_id"`
-	Name           string    `json:"name"`
-	BatchNo        string    `json:"batch_no"`
-	Source         string    `json:"source"`
-	Note           string    `json:"note"`
-	TotalCount     int64     `json:"total_count"`
-	AvailableCount int64     `json:"available_count"`
-	ReservedCount  int64     `json:"reserved_count"`
-	UsedCount      int64     `json:"used_count"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID                    uint      `json:"id"`
+	ProductID             uint      `json:"product_id"`
+	SKUID                 uint      `json:"sku_id"`
+	Name                  string    `json:"name"`
+	BatchNo               string    `json:"batch_no"`
+	Source                string    `json:"source"`
+	Note                  string    `json:"note"`
+	TotalCount            int64     `json:"total_count"`
+	AvailableCount        int64     `json:"available_count"`
+	ReservedCount         int64     `json:"reserved_count"`
+	UsedCount             int64     `json:"used_count"`
+	UpstreamRedeemedCount int64     `json:"upstream_redeemed_count"`
+	CreatedAt             time.Time `json:"created_at"`
 }
 
 // GetStats 获取库存统计
@@ -48,11 +51,22 @@ func (s *Service) GetStats(productID, skuID uint) (*CardSecretStats, error) {
 	if err != nil {
 		return nil, ErrStatsFailed
 	}
+	_, upstreamRedeemed, err := s.secretRepo.List(cardsecretcontract.ListFilter{
+		ProductID: productID,
+		SKUID:     skuID,
+		Status:    cardsecretdomain.StatusUpstreamRedeemed,
+		Page:      1,
+		PageSize:  1,
+	})
+	if err != nil {
+		return nil, ErrStatsFailed
+	}
 	return &CardSecretStats{
-		Total:     total,
-		Available: available,
-		Reserved:  reserved,
-		Used:      used,
+		Total:            total,
+		Available:        available,
+		Reserved:         reserved,
+		Used:             used,
+		UpstreamRedeemed: upstreamRedeemed,
 	}, nil
 }
 
@@ -87,9 +101,10 @@ func (s *Service) ListBatches(productID, skuID uint, page, pageSize int) ([]Card
 	}
 
 	type batchCounter struct {
-		available int64
-		reserved  int64
-		used      int64
+		available        int64
+		reserved         int64
+		used             int64
+		upstreamRedeemed int64
 	}
 	counterMap := make(map[uint]batchCounter, len(batchIDs))
 	for _, row := range countRows {
@@ -101,6 +116,8 @@ func (s *Service) ListBatches(productID, skuID uint, page, pageSize int) ([]Card
 			counter.reserved = row.Total
 		case cardsecretdomain.StatusUsed:
 			counter.used = row.Total
+		case cardsecretdomain.StatusUpstreamRedeemed:
+			counter.upstreamRedeemed = row.Total
 		}
 		counterMap[row.BatchID] = counter
 	}
@@ -109,18 +126,19 @@ func (s *Service) ListBatches(productID, skuID uint, page, pageSize int) ([]Card
 	for _, item := range items {
 		counter := counterMap[item.ID]
 		result = append(result, CardSecretBatchSummary{
-			ID:             item.ID,
-			ProductID:      item.ProductID,
-			SKUID:          item.SKUID,
-			Name:           "",
-			BatchNo:        item.BatchNo,
-			Source:         item.Source,
-			Note:           item.Note,
-			TotalCount:     counter.available + counter.reserved + counter.used,
-			AvailableCount: counter.available,
-			ReservedCount:  counter.reserved,
-			UsedCount:      counter.used,
-			CreatedAt:      item.CreatedAt,
+			ID:                    item.ID,
+			ProductID:             item.ProductID,
+			SKUID:                 item.SKUID,
+			Name:                  "",
+			BatchNo:               item.BatchNo,
+			Source:                item.Source,
+			Note:                  item.Note,
+			TotalCount:            counter.available + counter.reserved + counter.used + counter.upstreamRedeemed,
+			AvailableCount:        counter.available,
+			ReservedCount:         counter.reserved,
+			UsedCount:             counter.used,
+			UpstreamRedeemedCount: counter.upstreamRedeemed,
+			CreatedAt:             item.CreatedAt,
 		})
 	}
 	return result, total, nil

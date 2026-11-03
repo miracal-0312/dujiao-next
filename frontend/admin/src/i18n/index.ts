@@ -1945,7 +1945,11 @@ const messages = {
       },
       cardSecrets: {
         title: '卡密库存',
-        redemption: { confirmed: '充值已核销', unconfirmed: '尚无核销凭证' },
+        redemption: {
+          confirmed: '充值已核销',
+          unconfirmed: '尚无核销凭证',
+          lockedHint: '上游已确认核销，此卡密状态及内容已锁定，不能重新投入库存。',
+        },
         importAction: '前往导入页',
         guide: {
           title: '管理卡密库存',
@@ -2002,6 +2006,7 @@ const messages = {
           available: '可用',
           reserved: '占用',
           used: '已用',
+          upstreamRedeemed: '上游核销（不可用）',
         },
         listTable: {
           id: 'ID',
@@ -6493,7 +6498,11 @@ const messages = {
       },
       cardSecrets: {
         title: '卡密庫存',
-        redemption: { confirmed: '充值已核銷', unconfirmed: '尚無核銷憑證' },
+        redemption: {
+          confirmed: '充值已核銷',
+          unconfirmed: '尚無核銷憑證',
+          lockedHint: '上游已確認核銷，此卡密狀態及內容已鎖定，不能重新投入庫存。',
+        },
         importAction: '前往導入頁',
         guide: {
           title: '管理卡密庫存',
@@ -6550,6 +6559,7 @@ const messages = {
           available: '可用',
           reserved: '占用',
           used: '已用',
+          upstreamRedeemed: '上游核銷（不可用）',
         },
         listTable: {
           id: 'ID',
@@ -11041,7 +11051,11 @@ const messages = {
       },
       cardSecrets: {
         title: 'Card Secrets',
-        redemption: { confirmed: 'Recharge redeemed', unconfirmed: 'No redemption receipt' },
+        redemption: {
+          confirmed: 'Recharge redeemed',
+          unconfirmed: 'No redemption receipt',
+          lockedHint: 'The upstream service confirmed redemption. This secret is locked and cannot be returned to inventory.',
+        },
         importAction: 'Open Import Page',
         guide: {
           title: 'Manage Card Secret Inventory',
@@ -11098,6 +11112,7 @@ const messages = {
           available: 'Available',
           reserved: 'Reserved',
           used: 'Used',
+          upstreamRedeemed: 'Redeemed upstream (unavailable)',
         },
         listTable: {
           id: 'ID',

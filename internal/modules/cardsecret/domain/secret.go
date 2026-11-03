@@ -5,9 +5,10 @@ import (
 )
 
 const (
-	StatusAvailable = "available"
-	StatusReserved  = "reserved"
-	StatusUsed      = "used"
+	StatusAvailable        = "available"
+	StatusReserved         = "reserved"
+	StatusUsed             = "used"
+	StatusUpstreamRedeemed = "upstream_redeemed"
 )
 
 // Secret 卡密库存实体。
@@ -17,7 +18,7 @@ type Secret struct {
 	SKUID             uint       `gorm:"column:sku_id;not null;default:0;index:idx_card_secret_reserve" json:"sku_id"` // SKU ID
 	BatchID           *uint      `gorm:"index" json:"batch_id,omitempty"`                                              // 批次ID
 	Secret            string     `gorm:"type:text;not null" json:"secret"`                                             // 卡密内容
-	Status            string     `gorm:"not null;index:idx_card_secret_reserve" json:"status"`                         // 状态（available/used）
+	Status            string     `gorm:"not null;index:idx_card_secret_reserve" json:"status"`                         // 库存状态
 	OrderID           *uint      `gorm:"index" json:"order_id,omitempty"`                                              // 关联订单ID
 	ReservedAt        *time.Time `gorm:"index" json:"reserved_at"`                                                     // 占用时间
 	UsedAt            *time.Time `gorm:"index" json:"used_at"`                                                         // 使用时间

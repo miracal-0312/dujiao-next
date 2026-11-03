@@ -11,7 +11,7 @@ import (
 
 var _ contract.RedemptionRepository = (*Store)(nil)
 
-// RecordRedemption only marks an exactly matched, delivered inventory item.
+// RecordRedemption records the upstream receipt and makes available inventory unusable.
 // The receipt and item are one row, so retries cannot leave partial receipt records.
 func (r *Store) RecordRedemption(receipt contract.RedemptionReceipt) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
@@ -27,7 +27,7 @@ func (r *Store) RecordRedemption(receipt contract.RedemptionReceipt) error {
 			return contract.ErrRedemptionConflict
 		}
 		item := items[0]
-		if item.Secret != receipt.CDK || item.Status != domain.StatusUsed {
+		if item.Secret != receipt.CDK {
 			return contract.ErrRedemptionConflict
 		}
 		if item.RedeemedAt != nil {
@@ -38,6 +38,14 @@ func (r *Store) RecordRedemption(receipt contract.RedemptionReceipt) error {
 			}
 			return contract.ErrRedemptionConflict
 		}
+		targetStatus := item.Status
+		switch item.Status {
+		case domain.StatusUsed:
+		case domain.StatusAvailable:
+			targetStatus = domain.StatusUpstreamRedeemed
+		default:
+			return contract.ErrRedemptionConflict
+		}
 		var count int64
 		if err := tx.Model(&domain.Secret{}).Where("redemption_event_id = ?", receipt.EventID).Count(&count).Error; err != nil {
 			return err
@@ -45,8 +53,8 @@ func (r *Store) RecordRedemption(receipt contract.RedemptionReceipt) error {
 		if count != 0 {
 			return contract.ErrRedemptionConflict
 		}
-		result := tx.Model(&domain.Secret{}).Where("id = ? AND status = ? AND redeemed_at IS NULL AND deleted_at IS NULL", item.ID, domain.StatusUsed).
-			Updates(map[string]interface{}{"redeemed_at": receipt.RedeemedAt.UTC(), "redemption_event_id": receipt.EventID,
+		result := tx.Model(&domain.Secret{}).Where("id = ? AND status = ? AND redeemed_at IS NULL AND deleted_at IS NULL", item.ID, item.Status).
+			Updates(map[string]interface{}{"status": targetStatus, "redeemed_at": receipt.RedeemedAt.UTC(), "redemption_event_id": receipt.EventID,
 				"redemption_source": receipt.Source, "redemption_order_id": receipt.OrderID, "updated_at": time.Now()})
 		if result.Error != nil {
 			return result.Error

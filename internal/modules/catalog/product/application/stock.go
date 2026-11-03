@@ -51,7 +51,7 @@ func (s *Service) ApplyAutoStockCounts(products []productdomain.Product) error {
 		for _, statusMap := range pMap {
 			pAvailable += statusMap[cardsecretdomain.StatusAvailable]
 			pLocked += statusMap[cardsecretdomain.StatusReserved]
-			pUsed += statusMap[cardsecretdomain.StatusUsed]
+			pUsed += statusMap[cardsecretdomain.StatusUsed] + statusMap[cardsecretdomain.StatusUpstreamRedeemed]
 		}
 		products[i].AutoStockAvailable = pAvailable
 		products[i].AutoStockTotal = pAvailable + pLocked
@@ -65,14 +65,14 @@ func (s *Service) ApplyAutoStockCounts(products []productdomain.Product) error {
 
 			available := statusMap[cardsecretdomain.StatusAvailable]
 			locked := statusMap[cardsecretdomain.StatusReserved]
-			used := statusMap[cardsecretdomain.StatusUsed]
+			used := statusMap[cardsecretdomain.StatusUsed] + statusMap[cardsecretdomain.StatusUpstreamRedeemed]
 
 			// 如果 skuID 为 0 的历史卡密存在，优先归并到 DEFAULT SKU。
 			// 若不存在 DEFAULT SKU，则回退到首个启用 SKU，避免重复叠加到所有 SKU。
 			if j == legacyTargetIdx && pMap[0] != nil {
 				available += pMap[0][cardsecretdomain.StatusAvailable]
 				locked += pMap[0][cardsecretdomain.StatusReserved]
-				used += pMap[0][cardsecretdomain.StatusUsed]
+				used += pMap[0][cardsecretdomain.StatusUsed] + pMap[0][cardsecretdomain.StatusUpstreamRedeemed]
 			}
 
 			products[i].SKUs[j].AutoStockAvailable = available

@@ -19,14 +19,15 @@ func TestApplyAutoStockCounts_LegacyStockPrefersDefaultSKU(t *testing.T) {
 	insertCardSecrets(t, db, productID, 0, cardsecretdomain.StatusAvailable, 2)
 	insertCardSecrets(t, db, productID, 0, cardsecretdomain.StatusReserved, 1)
 	insertCardSecrets(t, db, productID, 0, cardsecretdomain.StatusUsed, 1)
+	insertCardSecrets(t, db, productID, 0, cardsecretdomain.StatusUpstreamRedeemed, 1)
 	insertCardSecrets(t, db, productID, defaultSKUID, cardsecretdomain.StatusAvailable, 3)
 	insertCardSecrets(t, db, productID, otherSKUID, cardsecretdomain.StatusAvailable, 4)
 	counts, err := cardsecretgormstore.New(db).CountStockByProductIDs([]uint{productID})
 	if err != nil {
 		t.Fatalf("count stock by product ids failed: %v", err)
 	}
-	if len(counts) != 5 {
-		t.Fatalf("expected 5 grouped stock rows, got %d", len(counts))
+	if len(counts) != 6 {
+		t.Fatalf("expected 6 grouped stock rows, got %d", len(counts))
 	}
 	bySKUAndStatus := make(map[uint]map[string]int64)
 	for _, row := range counts {
@@ -37,7 +38,8 @@ func TestApplyAutoStockCounts_LegacyStockPrefersDefaultSKU(t *testing.T) {
 	}
 	if bySKUAndStatus[0][cardsecretdomain.StatusAvailable] != 2 ||
 		bySKUAndStatus[0][cardsecretdomain.StatusReserved] != 1 ||
-		bySKUAndStatus[0][cardsecretdomain.StatusUsed] != 1 {
+		bySKUAndStatus[0][cardsecretdomain.StatusUsed] != 1 ||
+		bySKUAndStatus[0][cardsecretdomain.StatusUpstreamRedeemed] != 1 {
 		t.Fatalf("unexpected legacy sku(0) rows: %+v", bySKUAndStatus[0])
 	}
 	if bySKUAndStatus[defaultSKUID][cardsecretdomain.StatusAvailable] != 3 {
@@ -77,8 +79,8 @@ func TestApplyAutoStockCounts_LegacyStockPrefersDefaultSKU(t *testing.T) {
 	if got.AutoStockLocked != 1 {
 		t.Fatalf("expected product auto locked=1, got %d", got.AutoStockLocked)
 	}
-	if got.AutoStockSold != 1 {
-		t.Fatalf("expected product auto sold=1, got %d", got.AutoStockSold)
+	if got.AutoStockSold != 2 {
+		t.Fatalf("expected product auto sold=2, got %d", got.AutoStockSold)
 	}
 	if got.AutoStockTotal != 10 {
 		t.Fatalf("expected product auto total=10, got %d", got.AutoStockTotal)
@@ -97,7 +99,7 @@ func TestApplyAutoStockCounts_LegacyStockPrefersDefaultSKU(t *testing.T) {
 	if got.SKUs[1].AutoStockLocked != 1 {
 		t.Fatalf("expected default sku auto locked=1, got %d", got.SKUs[1].AutoStockLocked)
 	}
-	if got.SKUs[1].AutoStockSold != 1 {
-		t.Fatalf("expected default sku auto sold=1, got %d", got.SKUs[1].AutoStockSold)
+	if got.SKUs[1].AutoStockSold != 2 {
+		t.Fatalf("expected default sku auto sold=2, got %d", got.SKUs[1].AutoStockSold)
 	}
 }

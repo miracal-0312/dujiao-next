@@ -708,6 +708,7 @@ const cardSecretStatusLabel = (status: string) => {
     available: t('admin.cardSecrets.status.available'),
     reserved: t('admin.cardSecrets.status.reserved'),
     used: t('admin.cardSecrets.status.used'),
+    upstream_redeemed: t('admin.cardSecrets.status.upstreamRedeemed'),
   }
   return map[status] || status
 }
@@ -720,6 +721,8 @@ const cardSecretStatusClass = (status: string) => {
       return 'text-amber-700 border-amber-200 bg-amber-50'
     case 'used':
       return 'text-muted-foreground border-border bg-muted/30'
+    case 'upstream_redeemed':
+      return 'text-violet-700 border-violet-200 bg-violet-50'
     default:
       return 'text-muted-foreground border-border bg-muted/30'
   }
@@ -856,6 +859,8 @@ onMounted(async () => {
             (<span class="font-mono text-amber-700">{{ stats.reserved }}</span>) /
             {{ t('admin.cardSecrets.stats.used') }}
             (<span class="font-mono text-foreground">{{ stats.used }}</span>) /
+            {{ t('admin.cardSecrets.status.upstreamRedeemed') }}
+            (<span class="font-mono text-violet-700">{{ stats.upstream_redeemed }}</span>) /
             {{ t('admin.cardSecrets.stats.total') }}
             (<span class="font-mono text-foreground">{{ stats.total }}</span>)
           </template>
@@ -935,6 +940,9 @@ onMounted(async () => {
               <span class="rounded-full border border-border bg-muted/40 px-2 py-1 text-muted-foreground">
                 {{ t('admin.cardSecrets.stats.used') }} {{ batch.used_count }}
               </span>
+              <span class="rounded-full border border-violet-200 bg-violet-50 px-2 py-1 text-violet-700">
+                {{ t('admin.cardSecrets.status.upstreamRedeemed') }} {{ batch.upstream_redeemed_count || 0 }}
+              </span>
             </div>
             <p v-if="batch.note" class="mt-3 line-clamp-2 text-xs text-muted-foreground">{{ batch.note }}</p>
             <p class="mt-3 text-[11px] text-muted-foreground">{{ formatDate(batch.created_at) }}</p>
@@ -980,6 +988,7 @@ onMounted(async () => {
                   <SelectItem value="available">{{ t('admin.cardSecrets.status.available') }}</SelectItem>
                   <SelectItem value="reserved">{{ t('admin.cardSecrets.status.reserved') }}</SelectItem>
                   <SelectItem value="used">{{ t('admin.cardSecrets.status.used') }}</SelectItem>
+                  <SelectItem value="upstream_redeemed">{{ t('admin.cardSecrets.status.upstreamRedeemed') }}</SelectItem>
                 </SelectContent>
               </Select>
               <div class="flex gap-2">

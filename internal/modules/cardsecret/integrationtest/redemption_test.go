@@ -146,10 +146,13 @@ func TestRedemptionCallback(t *testing.T) {
 	for _, tc := range []struct {
 		code, status string
 		count, want  int
+		wantStatus   string
 	}{
-		{"CODE-AVAILABLE", domain.StatusAvailable, 1, 409}, {"CODE-RESERVED", domain.StatusReserved, 1, 409},
-		{"CODE-DUPLICATE", domain.StatusUsed, 2, 409}, {"CODE-MISSING", domain.StatusUsed, 0, 404},
-		{"CODE-OTHER", domain.StatusUsed, 1, 409},
+		{"CODE-AVAILABLE", domain.StatusAvailable, 1, 200, domain.StatusUpstreamRedeemed},
+		{"CODE-RESERVED", domain.StatusReserved, 1, 409, ""},
+		{"CODE-DUPLICATE", domain.StatusUsed, 2, 409, ""},
+		{"CODE-MISSING", domain.StatusUsed, 0, 404, ""},
+		{"CODE-OTHER", domain.StatusUsed, 1, 200, domain.StatusUsed},
 	} {
 		for n := 0; n < tc.count; n++ {
 			card := domain.Secret{ProductID: 1, Secret: tc.code, Status: tc.status}
@@ -159,8 +162,33 @@ func TestRedemptionCallback(t *testing.T) {
 		}
 		other := receipt
 		other.CDK = tc.code
+		eventID := sha256.Sum256([]byte("redemption:" + tc.code))
+		other.EventID = hex.EncodeToString(eventID[:])
 		if result := send(other, time.Now().Unix(), false); result.Code != tc.want {
 			t.Fatalf("%s: %d %s", tc.code, result.Code, result.Body)
+		}
+		if tc.wantStatus != "" {
+			var redeemed domain.Secret
+			if err := db.Where("secret = ? AND deleted_at IS NULL", tc.code).First(&redeemed).Error; err != nil {
+				t.Fatal(err)
+			}
+			if redeemed.Status != tc.wantStatus || redeemed.RedeemedAt == nil ||
+				redeemed.RedemptionEventID == nil || *redeemed.RedemptionEventID != other.EventID {
+				t.Fatalf("CDK redemption was not recorded correctly: %+v", redeemed)
+			}
+			if count, err := store.Reserve([]uint{redeemed.ID}, 456, time.Now()); err != nil || count != 0 {
+				t.Fatalf("upstream-redeemed CDK became reservable: count=%d err=%v", count, err)
+			}
+			if result := send(other, time.Now().Unix(), false); result.Code != http.StatusOK {
+				t.Fatalf("upstream-redemption retry was not idempotent: %d %s", result.Code, result.Body)
+			}
+			redeemed.Status = domain.StatusAvailable
+			if err := store.Update(&redeemed); err == nil {
+				t.Fatal("admin edit reopened upstream-redeemed CDK")
+			}
+			if count, err := store.BatchUpdateStatus([]uint{redeemed.ID}, domain.StatusAvailable, time.Now()); err != nil || count != 0 {
+				t.Fatalf("batch update reopened upstream-redeemed CDK: count=%d err=%v", count, err)
+			}
 		}
 	}
 	for _, change := range []func(*contract.RedemptionReceipt){

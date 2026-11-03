@@ -211,6 +211,7 @@ export interface AdminCardSecretBatch {
   available_count: number
   reserved_count: number
   used_count: number
+  upstream_redeemed_count?: number
   created_at: string
 }
 
